@@ -1,0 +1,60 @@
+﻿<Window x:Class="RESTClientService.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:RESTClientService"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+
+    <Canvas>
+        <DataGrid x:Name="RoomDataGrid" AutoGenerateColumns="False" Margin="0,0,0,255" IsReadOnly="True">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="ID" Binding="{Binding id}" />
+                <DataGridTextColumn Header="Name" Binding="{Binding name}" />
+                <DataGridTextColumn Header="County" Binding="{Binding location.county}" />
+                <DataGridTextColumn Header="City" Binding="{Binding location.city}" />
+                <DataGridTextColumn Header="Postcode" Binding="{Binding location.postcode}" />
+                <DataGridTextColumn Header="Monthly Price" Binding="{Binding price_per_month_gbp}" />
+                <DataGridTemplateColumn Header="Apply">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Content="Apply" Click="UserApplied" Tag="{Binding UserApplied}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+        <Button Content="Check Distance" Canvas.Left="23" Canvas.Top="352" Click="CheckDistance" Tag="{Binding CheckDistance}"/>
+        <TextBox x:Name="postcodeText" Canvas.Left="10" TextWrapping="Wrap" Text="" Canvas.Top="329" Width="120"/>
+        <TextBlock Canvas.Left="30" TextWrapping="Wrap" Text="Enter Postcode" Canvas.Top="308"/>
+        <Button Content="Check Weather" Canvas.Left="196" Canvas.Top="352" Click="CheckWeather" Tag="{Binding CheckWeather}"/>
+        <Button Content="Check Crime" Canvas.Left="360" Canvas.Top="352" Click="CheckCrime" Tag="{Binding CheckCrime}"/>
+        <TextBlock Name="LoadingIcon" Canvas.Left="295" TextWrapping="Wrap" Text="Loading..." Canvas.Top="217" FontSize="50" Visibility="Collapsed"/>
+        <Button Name="ViewApplicationButton" Content="View Applications" Canvas.Left="618" Canvas.Top="329" Click="ViewApplicationsAsync" Tag="{Binding ViewApplicationsAsync}"/>
+
+        <DataGrid x:Name="ApplicationsDataGrid" AutoGenerateColumns="False" IsReadOnly="True" Canvas.Left="3" HorizontalAlignment="Left" VerticalAlignment="Center" Visibility="Collapsed">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="ApplicationID" Binding="{Binding applicationID}" />
+                <DataGridTextColumn Header="RoomID" Binding="{Binding roomID}" />
+                <DataGridTextColumn Header="Name" Binding="{Binding name}" />
+                <DataGridTextColumn Header="status" Binding="{Binding status}"/>
+                <DataGridTemplateColumn Header="Cancel" Visibility="Collapsed">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Content="Cancel" Click="UserCancelled" Tag="{Binding UserCancelled}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+        <Button Content="View Rooms" Canvas.Left="632" Canvas.Top="362" HorizontalAlignment="Left" VerticalAlignment="Center" Click="ViewRooms" Tag="{Binding ViewRooms}"/>
+        <Button Content="View History" Canvas.Left="632" Canvas.Top="296" Click="ViewHistory" Tag="{Binding ViewHistory}"/>
+
+
+    </Canvas>
+
+
+
+
+</Window>

@@ -1,0 +1,71 @@
+# User-specific files
+*.user
+*.userosscache
+*.suo
+*.userprefs
+
+# User-specific files from JetBrains Rider
+.idea/
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Dd]Release/
+[Dd]ReleasePublic/
+x64/
+x86/
+[Aa]rchive/
+
+# Windows Installer files
+*.cab
+*.msi
+*.msm
+*.msp
+
+# Windows Installer files from Visual Studio
+*.vssscc
+.vs/
+
+# Windows Installer files
+*.pdb
+*.cache
+*.vspscc
+.vspscc
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+
+# Npm packages (if using Node.js)
+node_modules/
+
+# Web & other generated files
+*.css
+*.html
+*.js
+*.map
+
+# Log files
+*.log
+
+# .NET Core
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# WPF compiled files
+*.ilk
+*.obj
+*.exe
+*.dll
+*.pdb
+*.tmp
+
+# Windows Installer Files
+*.cab
+*.msi
+*.msm
+*.msp
+
+# Other temp files
+*.tmp
