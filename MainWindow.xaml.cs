@@ -24,6 +24,7 @@ using Newtonsoft.Json;
 
 namespace RESTClientService
 {
+    //MAIN WINDOW OF APPLICATION
     public partial class MainWindow : Window
     {
 
@@ -35,13 +36,16 @@ namespace RESTClientService
             ReadRoomDataAsync();
         }
 
+
+        //ROOM RELATED METHODS  ===================================================================================================================================
+        //Async room data method presents the rooms in a List of RoomData objects which is used as item source in XAML
         private async void ReadRoomDataAsync()
         {
            
             string json = await GetRoomsAsync(client);
 
-
             List<RoomData.RoomData> roomList = JsonConvert.DeserializeObject<List<RoomData.RoomData>>(json);
+
             if (roomList != null && roomList.Count > 0)
             {
                 RoomDataGrid.ItemsSource = roomList; 
@@ -52,6 +56,7 @@ namespace RESTClientService
             }
         }
 
+        //Uses the orchestrator get request to access rooms in the data base
         static async Task<string> GetRoomsAsync(HttpClient httpClient)
         {
 
@@ -64,12 +69,15 @@ namespace RESTClientService
             return responseContent;
         }
 
+        //Method to register the user has clicked the apply button
         private void UserApplied(object sender, RoutedEventArgs e)
         {
             RoomData.RoomData roomItem = RoomDataGrid.SelectedItem as RoomData.RoomData;
             Task<bool> task = postApplication(roomItem, client);
         }
 
+        //Method that is async while client communicates with orchestrator after room is applied for, returns value dependant on HTTP Response
+        //Room data is serialized, similar to gson but uses newtonsoft library. And then uses post request in orchestrator
         private async Task<bool> postApplication(RoomData.RoomData roomData, HttpClient client)
         {
             StringContent roomDataJSON = new StringContent(JsonConvert.SerializeObject(roomData), Encoding.UTF8, "application/json");
@@ -94,6 +102,9 @@ namespace RESTClientService
             
         }
 
+
+        //WEATHER RELATED METHODS  ===================================================================================================================================
+        //Method to register if user clicked the check weather button in the UI, sends the 
         private async void CheckWeather(object sender, RoutedEventArgs e)
         {
             RoomData.RoomData roomItem = RoomDataGrid.SelectedItem as RoomData.RoomData;
@@ -112,13 +123,15 @@ namespace RESTClientService
             }            
         }
 
+        //Uses the orchestrator GET request to retrieve weather JSON  that is converted to object and used to construct weather string on client side
         static async Task<string> GetWeatherAsync(HttpClient httpClient, string postcode)
         {
             HttpResponseMessage response = await httpClient.GetAsync("http://localhost:8080/RESTService/webresources/weather?postcode=" + postcode);
             response.EnsureSuccessStatusCode();
 
+            //have to read the response in this way or data is incorrect format
             var responseContent = await response.Content.ReadAsStringAsync();
-            Trace.WriteLine("THIS IS RESPONSE: " + responseContent);
+            //Trace.WriteLine("THIS IS RESPONSE: " + responseContent);
             WeatherObject weatherObj = JsonConvert.DeserializeObject<WeatherObject>(responseContent);
 
             string responseString = "Weather: " + weatherObj.weather + "\nWind Speed: " + weatherObj.windSpeed + "\nTemperature: " + weatherObj.temperature;
@@ -126,6 +139,9 @@ namespace RESTClientService
             return responseString;
         }
 
+
+        //DISTANCE RELATED METHODS  ===================================================================================================================================
+        //Check distance method for button click on UI, converts user entered postcode into acceptable format before trying to use API
         private async void CheckDistance(object sender, RoutedEventArgs e)
         {
 
@@ -150,6 +166,7 @@ namespace RESTClientService
             }   
         }
         
+        //Orchestrator GET request that returns JSON that is deserialised into object for storage and use in client
         static async Task<string> GetDistanceAsync(HttpClient httpClient, string postcode1, string postcode2)
         {
             HttpResponseMessage response = await httpClient.GetAsync("http://localhost:8080/RESTService/webresources/location?postcode1=" + postcode1 + "&postcode2=" + postcode2);
@@ -161,7 +178,9 @@ namespace RESTClientService
             return routeObj.distance.ToString(); ;
         }
 
-        
+
+        //CRIME RELATED METHODS  ===================================================================================================================================
+        //Check crime method for button click on UI, converts user entered postcode into acceptable format before trying to use API
         private async void CheckCrime(object sender, RoutedEventArgs e)
         {
             RoomData.RoomData roomItem = RoomDataGrid.SelectedItem as RoomData.RoomData;
@@ -180,6 +199,7 @@ namespace RESTClientService
             }  
         }
 
+        //Method for using the orchestrator to get crime data
         static async Task<string> GetCrimeAsync(HttpClient httpClient, string postcode)
         {
             HttpResponseMessage response = await httpClient.GetAsync("http://localhost:8080/RESTService/webresources/crime?postcode=" + postcode);
@@ -189,26 +209,14 @@ namespace RESTClientService
 
             CrimeReportObject crimeReport = JsonConvert.DeserializeObject<CrimeReportObject>(responseContent);
             Trace.WriteLine("Current crime report: " + crimeReport.crimePairs);
-            //Dictionary<string, int> keyValuePairs = new Dictionary<string, int>();
-
-            //foreach (CrimeReportObject crimeReport in crimeReportList)
-            //{               
-            //    if (keyValuePairs.ContainsKey(crimeReport.Category))
-            //    {
-            //        keyValuePairs[crimeReport.Category] += 1;
-            //    }
-            //    else
-            //    {
-            //        keyValuePairs.Add(crimeReport.Category, 1);
-            //    }
-            //}
 
             string crimeLogString = "";
+
             foreach (var entry in crimeReport.crimePairs)
             {
                 crimeLogString += entry.Key + ": " + entry.Value + "\n";
             }
-
+            //DO I NEED THIS TESTSETSETESTEESTESTEST
             if (crimeLogString == "")
             {
                 crimeLogString = "There is no crime to report";
@@ -217,6 +225,11 @@ namespace RESTClientService
             return crimeLogString;
         }
 
+
+        //APPLICATION AND HISTORY RELATED METHODS  ==================================================================================================================
+        
+        //UI Button that allows the user to view existing applications. The orchestrator returns the appropriate data from the database in JSON format
+        //Data in the UI DataGrid is set accordingly after deserialising JSON into List of ApplicationData objects
         public async void ViewApplicationsAsync(object sender, RoutedEventArgs e)
         {
             string json = await GetApplicationsAsync(client);
@@ -230,13 +243,27 @@ namespace RESTClientService
             ApplicationsDataGrid.Visibility = Visibility.Visible;           
         }
 
-        public void ViewRooms(object sender, RoutedEventArgs e)
+        //Uses the orchestrator GET request to retrieve data on applications presented in JSON format
+        static async Task<string> GetApplicationsAsync(HttpClient httpClient)
         {
 
+            HttpResponseMessage response = await httpClient.GetAsync("http://localhost:8080/RESTService/webresources/userApplication/applications");
+
+            response.EnsureSuccessStatusCode();
+
+            var jsonResponse = await response.Content.ReadAsStringAsync();
+
+            return jsonResponse;
+        }
+
+        //UI Button to return to the table that shows available rooms
+        public void ViewRooms(object sender, RoutedEventArgs e)
+        {
             ApplicationsDataGrid.Visibility = Visibility.Collapsed;
             RoomDataGrid.Visibility = Visibility.Visible;
         }
 
+        //UI button method for if the user wishes to cancel an existing application, sends request to orchestrator as a PUT request
         public void UserCancelled(object sender, RoutedEventArgs e)
         {
             ApplicationData application = new ApplicationData();
@@ -254,7 +281,7 @@ namespace RESTClientService
             //MessageBox.Show(applicationDataJson);
         }
 
-
+        //Uses the orchestrator PUT request to update an application with the cancelled status, passes the corresponding application json to the orchestrator for management
         private async Task<bool> putApplication(ApplicationData applicationData, HttpClient client)
         {
             StringContent applicationDataJSON = new StringContent(JsonConvert.SerializeObject(applicationData), Encoding.UTF8, "application/json");
@@ -263,6 +290,7 @@ namespace RESTClientService
 
             if (response.IsSuccessStatusCode)
             {
+                //simulates a button click
                 ViewApplicationButton.RaiseEvent(new RoutedEventArgs(ButtonBase.ClickEvent));
                 MessageBox.Show("This application has been cancelled");
                 return true;
@@ -277,18 +305,7 @@ namespace RESTClientService
         }
 
 
-        static async Task<string> GetApplicationsAsync(HttpClient httpClient)
-        {
-
-            HttpResponseMessage response = await httpClient.GetAsync("http://localhost:8080/RESTService/webresources/userApplication/applications");
-
-            response.EnsureSuccessStatusCode();
-
-            var jsonResponse = await response.Content.ReadAsStringAsync();
-
-            return jsonResponse;
-        }
-
+        //Uses orchestrator GET request to return the list of room applications history
         static async Task<string> GetAppHistoryAsync(HttpClient httpClient)
         {
 
@@ -301,6 +318,7 @@ namespace RESTClientService
             return jsonResponse;
         }
 
+        //UI Button for if the use wishes to view history of applications
         private async void ViewHistory(object sender, RoutedEventArgs e)
         {
             string json = await GetAppHistoryAsync(client);
