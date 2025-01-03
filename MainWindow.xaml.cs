@@ -27,7 +27,7 @@ namespace RESTClientService
     //MAIN WINDOW OF APPLICATION
     public partial class MainWindow : Window
     {
-
+        private string _userID;
         HttpClient client = new HttpClient();
 
         public MainWindow()
@@ -36,6 +36,34 @@ namespace RESTClientService
             ReadRoomDataAsync();
         }
 
+
+        private string GetUserID()
+        {
+            if (string.IsNullOrEmpty(_userID))
+            {
+                EnterUserID userIDTextBox = new EnterUserID();
+                bool? dialogResult = userIDTextBox.ShowDialog();
+
+                if (dialogResult == true)
+                {
+                    _userID = userIDTextBox.UserID;
+                }
+                
+            }
+
+            return _userID;
+        }
+
+        public void ChangeUser(object sender, RoutedEventArgs e)
+        {
+            EnterUserID userIDTextBox = new EnterUserID();
+            bool? dialogResult = userIDTextBox.ShowDialog();
+
+            if (dialogResult == true)
+            {
+                _userID = userIDTextBox.UserID;
+            }
+        }
 
         //ROOM RELATED METHODS  ===================================================================================================================================
         //Async room data method presents the rooms in a List of RoomData objects which is used as item source in XAML
@@ -70,7 +98,7 @@ namespace RESTClientService
         }
 
         //Method to register the user has clicked the apply button
-        private void UserApplied(object sender, RoutedEventArgs e)
+        private void AppliedClicked(object sender, RoutedEventArgs e)
         {
             RoomData.RoomData roomItem = RoomDataGrid.SelectedItem as RoomData.RoomData;
             Task<bool> task = postApplication(roomItem, client);
@@ -79,9 +107,10 @@ namespace RESTClientService
         //Method that is async while client communicates with orchestrator after room is applied for, returns value dependant on HTTP Response
         //Room data is serialized, similar to gson but uses newtonsoft library. And then uses post request in orchestrator
         private async Task<bool> postApplication(RoomData.RoomData roomData, HttpClient client)
-        {
+        {           
+            string userID = GetUserID();
             StringContent roomDataJSON = new StringContent(JsonConvert.SerializeObject(roomData), Encoding.UTF8, "application/json");
-            HttpResponseMessage response = await client.PostAsync("http://localhost:8080/RESTService/webresources/userApplication", roomDataJSON);
+            HttpResponseMessage response = await client.PostAsync("http://localhost:8080/RESTService/webresources/userApplication?UserID=" + userID, roomDataJSON);
 
             if (response.IsSuccessStatusCode)
             {
@@ -101,7 +130,113 @@ namespace RESTClientService
             }
             
         }
+        //APPLICATION AND HISTORY RELATED METHODS  ==================================================================================================================
 
+        //UI Button that allows the user to view existing applications. The orchestrator returns the appropriate data from the database in JSON format
+        //Data in the UI DataGrid is set accordingly after deserialising JSON into List of ApplicationData objects
+        public async void ViewApplicationsAsync(object sender, RoutedEventArgs e)
+        {
+            string userID = GetUserID();
+            string json = await GetApplicationsAsync(client, userID);
+            
+            List<ApplicationData> roomList = JsonConvert.DeserializeObject<List<ApplicationData>>(json);
+
+            ApplicationsDataGrid.ItemsSource = roomList;
+
+            ApplicationsDataGrid.Columns[5].Visibility = Visibility.Visible;
+            RoomDataGrid.Visibility = Visibility.Collapsed;
+            ApplicationsDataGrid.Visibility = Visibility.Visible;
+        }
+
+        //Uses the orchestrator GET request to retrieve data on applications presented in JSON format
+        static async Task<string> GetApplicationsAsync(HttpClient httpClient, string userID)
+        {
+            
+            HttpResponseMessage response = await httpClient.GetAsync("http://localhost:8080/RESTService/webresources/userApplication/applications?UserID=" + userID);
+
+            response.EnsureSuccessStatusCode();
+
+            var jsonResponse = await response.Content.ReadAsStringAsync();
+            Trace.WriteLine("THIS IS THE JSON FOR APPLICATIONS: " + jsonResponse);
+            return jsonResponse;
+        }
+
+        //UI Button to return to the table that shows available rooms
+        public void ViewRooms(object sender, RoutedEventArgs e)
+        {
+            ApplicationsDataGrid.Visibility = Visibility.Collapsed;
+            RoomDataGrid.Visibility = Visibility.Visible;
+        }
+
+        //UI button method for if the user wishes to cancel an existing application, sends request to orchestrator as a PUT request
+        public void UserCancelled(object sender, RoutedEventArgs e)
+        {
+            ApplicationData application = new ApplicationData();
+            for (int i = 0; i < ApplicationsDataGrid.Items.Count; i++)
+            {
+                var item = ApplicationsDataGrid.Items[i];
+                application.applicationID = (item as ApplicationData).applicationID;
+                application.roomID = (item as ApplicationData).roomID;
+                application.name = (item as ApplicationData).name;
+                application.status = (item as ApplicationData).status;
+
+            }
+       
+            Task<bool> task = putApplication(application, client);
+
+        }
+
+        //Uses the orchestrator PUT request to update an application with the cancelled status, passes the corresponding application json to the orchestrator for management
+        private async Task<bool> putApplication(ApplicationData applicationData, HttpClient client)
+        {
+            StringContent applicationDataJSON = new StringContent(JsonConvert.SerializeObject(applicationData), Encoding.UTF8, "application/json");
+            Trace.WriteLine("THIS IS THE JSON: " + await applicationDataJSON.ReadAsStringAsync());
+            HttpResponseMessage response = await client.PutAsync("http://localhost:8080/RESTService/webresources/userApplication/cancel", applicationDataJSON);
+
+            if (response.IsSuccessStatusCode)
+            {
+                //simulates a button click
+                ViewApplicationButton.RaiseEvent(new RoutedEventArgs(ButtonBase.ClickEvent));
+                MessageBox.Show("This application has been cancelled");
+                return true;
+            }
+            else
+            {
+                string errorMessage = await response.Content.ReadAsStringAsync();
+                MessageBox.Show("Error updating application: " + errorMessage);
+                return false;
+            }
+
+        }
+
+
+        //Uses orchestrator GET request to return the list of room applications history
+        static async Task<string> GetAppHistoryAsync(HttpClient httpClient, string userID)
+        {
+            
+            HttpResponseMessage response = await httpClient.GetAsync("http://localhost:8080/RESTService/webresources/userApplication/history?UserID=" + userID);
+
+            response.EnsureSuccessStatusCode();
+
+            var jsonResponse = await response.Content.ReadAsStringAsync();
+
+            return jsonResponse;
+        }
+
+        //UI Button for if the use wishes to view history of applications
+        private async void ViewHistory(object sender, RoutedEventArgs e)
+        {
+            string userID = GetUserID();
+            string json = await GetAppHistoryAsync(client, userID);
+
+            List<ApplicationData> roomList = JsonConvert.DeserializeObject<List<ApplicationData>>(json);
+
+            ApplicationsDataGrid.ItemsSource = roomList;
+
+            ApplicationsDataGrid.Columns[5].Visibility = Visibility.Collapsed;
+            RoomDataGrid.Visibility = Visibility.Collapsed;
+            ApplicationsDataGrid.Visibility = Visibility.Visible;
+        }
 
         //WEATHER RELATED METHODS  ===================================================================================================================================
         //Method to register if user clicked the check weather button in the UI, sends the 
@@ -216,7 +351,7 @@ namespace RESTClientService
             {
                 crimeLogString += entry.Key + ": " + entry.Value + "\n";
             }
-            //DO I NEED THIS TESTSETSETESTEESTESTEST
+            
             if (crimeLogString == "")
             {
                 crimeLogString = "There is no crime to report";
@@ -225,111 +360,7 @@ namespace RESTClientService
             return crimeLogString;
         }
 
-
-        //APPLICATION AND HISTORY RELATED METHODS  ==================================================================================================================
+       
         
-        //UI Button that allows the user to view existing applications. The orchestrator returns the appropriate data from the database in JSON format
-        //Data in the UI DataGrid is set accordingly after deserialising JSON into List of ApplicationData objects
-        public async void ViewApplicationsAsync(object sender, RoutedEventArgs e)
-        {
-            string json = await GetApplicationsAsync(client);
-
-            List<ApplicationData> roomList = JsonConvert.DeserializeObject<List<ApplicationData>>(json);
-
-            ApplicationsDataGrid.ItemsSource = roomList;
-
-            ApplicationsDataGrid.Columns[4].Visibility = Visibility.Visible;
-            RoomDataGrid.Visibility = Visibility.Collapsed;
-            ApplicationsDataGrid.Visibility = Visibility.Visible;           
-        }
-
-        //Uses the orchestrator GET request to retrieve data on applications presented in JSON format
-        static async Task<string> GetApplicationsAsync(HttpClient httpClient)
-        {
-
-            HttpResponseMessage response = await httpClient.GetAsync("http://localhost:8080/RESTService/webresources/userApplication/applications");
-
-            response.EnsureSuccessStatusCode();
-
-            var jsonResponse = await response.Content.ReadAsStringAsync();
-
-            return jsonResponse;
-        }
-
-        //UI Button to return to the table that shows available rooms
-        public void ViewRooms(object sender, RoutedEventArgs e)
-        {
-            ApplicationsDataGrid.Visibility = Visibility.Collapsed;
-            RoomDataGrid.Visibility = Visibility.Visible;
-        }
-
-        //UI button method for if the user wishes to cancel an existing application, sends request to orchestrator as a PUT request
-        public void UserCancelled(object sender, RoutedEventArgs e)
-        {
-            ApplicationData application = new ApplicationData();
-            for (int i = 0; i < ApplicationsDataGrid.Items.Count; i++)
-            {
-                var item = ApplicationsDataGrid.Items[i];
-                application.applicationID = (item as ApplicationData).applicationID;
-                application.roomID = (item as ApplicationData).roomID;
-                application.name = (item as ApplicationData).name;
-                application.status = (item as ApplicationData).status;
-
-            }
-            //string applicationDataJson = JsonConvert.SerializeObject(application);
-            Task<bool> task = putApplication(application, client);
-            //MessageBox.Show(applicationDataJson);
-        }
-
-        //Uses the orchestrator PUT request to update an application with the cancelled status, passes the corresponding application json to the orchestrator for management
-        private async Task<bool> putApplication(ApplicationData applicationData, HttpClient client)
-        {
-            StringContent applicationDataJSON = new StringContent(JsonConvert.SerializeObject(applicationData), Encoding.UTF8, "application/json");
-            Trace.WriteLine("THIS IS THE JSON: " + await applicationDataJSON.ReadAsStringAsync());
-            HttpResponseMessage response = await client.PutAsync("http://localhost:8080/RESTService/webresources/userApplication/cancel", applicationDataJSON);
-
-            if (response.IsSuccessStatusCode)
-            {
-                //simulates a button click
-                ViewApplicationButton.RaiseEvent(new RoutedEventArgs(ButtonBase.ClickEvent));
-                MessageBox.Show("This application has been cancelled");
-                return true;
-            }
-            else
-            {
-                string errorMessage = await response.Content.ReadAsStringAsync();
-                MessageBox.Show("Error updating application: " + errorMessage);
-                return false;
-            }
-
-        }
-
-
-        //Uses orchestrator GET request to return the list of room applications history
-        static async Task<string> GetAppHistoryAsync(HttpClient httpClient)
-        {
-
-            HttpResponseMessage response = await httpClient.GetAsync("http://localhost:8080/RESTService/webresources/userApplication/history");
-
-            response.EnsureSuccessStatusCode();
-
-            var jsonResponse = await response.Content.ReadAsStringAsync();
-
-            return jsonResponse;
-        }
-
-        //UI Button for if the use wishes to view history of applications
-        private async void ViewHistory(object sender, RoutedEventArgs e)
-        {
-            string json = await GetAppHistoryAsync(client);
-
-            List<ApplicationData> roomList = JsonConvert.DeserializeObject<List<ApplicationData>>(json);
-
-            ApplicationsDataGrid.ItemsSource = roomList;
-
-            ApplicationsDataGrid.Columns[4].Visibility = Visibility.Collapsed;
-            RoomDataGrid.Visibility = Visibility.Collapsed;
-            ApplicationsDataGrid.Visibility = Visibility.Visible;
-        }
     }
 }
