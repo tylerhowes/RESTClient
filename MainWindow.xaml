@@ -5,7 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:RESTClientService"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="450" Width="800"
+        WindowStartupLocation="CenterScreen">
 
     <Canvas>
         <DataGrid x:Name="RoomDataGrid" AutoGenerateColumns="False" Margin="0,0,0,255" IsReadOnly="True">
@@ -19,7 +20,7 @@
                 <DataGridTemplateColumn Header="Apply">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <Button Content="Apply" Click="UserApplied" Tag="{Binding UserApplied}" />
+                            <Button Content="Apply" Click="AppliedClicked" Tag="{Binding AppliedClicked}" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
@@ -30,11 +31,13 @@
         <TextBlock Canvas.Left="30" TextWrapping="Wrap" Text="Enter Postcode" Canvas.Top="308"/>
         <Button Content="Check Weather" Canvas.Left="196" Canvas.Top="352" Click="CheckWeather" Tag="{Binding CheckWeather}"/>
         <Button Content="Check Crime" Canvas.Left="360" Canvas.Top="352" Click="CheckCrime" Tag="{Binding CheckCrime}"/>
+        <Button Content="Change User" Canvas.Left="485" Canvas.Top="352" Click="ChangeUser" Tag="{Binding ChangeUser}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
         <TextBlock Name="LoadingIcon" Canvas.Left="295" TextWrapping="Wrap" Text="Loading..." Canvas.Top="217" FontSize="50" Visibility="Collapsed"/>
         <Button Name="ViewApplicationButton" Content="View Applications" Canvas.Left="618" Canvas.Top="329" Click="ViewApplicationsAsync" Tag="{Binding ViewApplicationsAsync}"/>
 
         <DataGrid x:Name="ApplicationsDataGrid" AutoGenerateColumns="False" IsReadOnly="True" Canvas.Left="3" HorizontalAlignment="Left" VerticalAlignment="Center" Visibility="Collapsed">
             <DataGrid.Columns>
+                <DataGridTextColumn Header="UserID" Binding="{Binding userID}" />
                 <DataGridTextColumn Header="ApplicationID" Binding="{Binding applicationID}" />
                 <DataGridTextColumn Header="RoomID" Binding="{Binding roomID}" />
                 <DataGridTextColumn Header="Name" Binding="{Binding name}" />

@@ -8,6 +8,7 @@ namespace RESTClientService
 {
     internal class ApplicationData
     {
+        public string userID { get; set; }
         public int applicationID {  get; set; }
         public int roomID { get; set; }
         public string name { get; set; }
