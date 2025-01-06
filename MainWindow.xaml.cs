@@ -88,7 +88,7 @@ namespace RESTClientService
         static async Task<string> GetRoomsAsync(HttpClient httpClient)
         {
 
-            HttpResponseMessage response = await httpClient.GetAsync("http://localhost:8080/RESTService/webresources/roomDB");
+            HttpResponseMessage response = await httpClient.GetAsync("http://135.236.96.88:8080/RestServiceAndDB/webresources/roomDB");
 
             response.EnsureSuccessStatusCode();
 
@@ -110,7 +110,7 @@ namespace RESTClientService
         {           
             string userID = GetUserID();
             StringContent roomDataJSON = new StringContent(JsonConvert.SerializeObject(roomData), Encoding.UTF8, "application/json");
-            HttpResponseMessage response = await client.PostAsync("http://localhost:8080/RESTService/webresources/userApplication?UserID=" + userID, roomDataJSON);
+            HttpResponseMessage response = await client.PostAsync("http://135.236.96.88:8080/RestServiceAndDB/webresources/userApplication?UserID=" + userID, roomDataJSON);
 
             if (response.IsSuccessStatusCode)
             {
@@ -152,7 +152,7 @@ namespace RESTClientService
         static async Task<string> GetApplicationsAsync(HttpClient httpClient, string userID)
         {
             
-            HttpResponseMessage response = await httpClient.GetAsync("http://localhost:8080/RESTService/webresources/userApplication/applications?UserID=" + userID);
+            HttpResponseMessage response = await httpClient.GetAsync("http://135.236.96.88:8080/RestServiceAndDB/webresources/userApplication/applications?UserID=" + userID);
 
             response.EnsureSuccessStatusCode();
 
@@ -191,7 +191,7 @@ namespace RESTClientService
         {
             StringContent applicationDataJSON = new StringContent(JsonConvert.SerializeObject(applicationData), Encoding.UTF8, "application/json");
             Trace.WriteLine("THIS IS THE JSON: " + await applicationDataJSON.ReadAsStringAsync());
-            HttpResponseMessage response = await client.PutAsync("http://localhost:8080/RESTService/webresources/userApplication/cancel", applicationDataJSON);
+            HttpResponseMessage response = await client.PutAsync("http://135.236.96.88:8080/RestServiceAndDB/webresources/userApplication/cancel", applicationDataJSON);
 
             if (response.IsSuccessStatusCode)
             {
@@ -214,7 +214,7 @@ namespace RESTClientService
         static async Task<string> GetAppHistoryAsync(HttpClient httpClient, string userID)
         {
             
-            HttpResponseMessage response = await httpClient.GetAsync("http://localhost:8080/RESTService/webresources/userApplication/history?UserID=" + userID);
+            HttpResponseMessage response = await httpClient.GetAsync("http://135.236.96.88:8080/RestServiceAndDB/webresources/userApplication/history?UserID=" + userID);
 
             response.EnsureSuccessStatusCode();
 
@@ -261,7 +261,7 @@ namespace RESTClientService
         //Uses the orchestrator GET request to retrieve weather JSON  that is converted to object and used to construct weather string on client side
         static async Task<string> GetWeatherAsync(HttpClient httpClient, string postcode)
         {
-            HttpResponseMessage response = await httpClient.GetAsync("http://localhost:8080/RESTService/webresources/weather?postcode=" + postcode);
+            HttpResponseMessage response = await httpClient.GetAsync("http://135.236.96.88:8080/RestServiceAndDB/webresources/weather?postcode=" + postcode);
             response.EnsureSuccessStatusCode();
 
             //have to read the response in this way or data is incorrect format
@@ -304,7 +304,7 @@ namespace RESTClientService
         //Orchestrator GET request that returns JSON that is deserialised into object for storage and use in client
         static async Task<string> GetDistanceAsync(HttpClient httpClient, string postcode1, string postcode2)
         {
-            HttpResponseMessage response = await httpClient.GetAsync("http://localhost:8080/RESTService/webresources/location?postcode1=" + postcode1 + "&postcode2=" + postcode2);
+            HttpResponseMessage response = await httpClient.GetAsync("http://135.236.96.88:8080/RestServiceAndDB/webresources/location?postcode1=" + postcode1 + "&postcode2=" + postcode2);
             response.EnsureSuccessStatusCode();
 
             var responseContent = await response.Content.ReadAsStringAsync();
@@ -337,7 +337,7 @@ namespace RESTClientService
         //Method for using the orchestrator to get crime data
         static async Task<string> GetCrimeAsync(HttpClient httpClient, string postcode)
         {
-            HttpResponseMessage response = await httpClient.GetAsync("http://localhost:8080/RESTService/webresources/crime?postcode=" + postcode);
+            HttpResponseMessage response = await httpClient.GetAsync("http://135.236.96.88:8080/RestServiceAndDB/webresources/crime?postcode=" + postcode);
             response.EnsureSuccessStatusCode();
 
             var responseContent = await response.Content.ReadAsStringAsync();
