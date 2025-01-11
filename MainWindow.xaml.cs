@@ -8,6 +8,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Reflection.Emit;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -243,19 +244,27 @@ namespace RESTClientService
         private async void CheckWeather(object sender, RoutedEventArgs e)
         {
             RoomData.RoomData roomItem = RoomDataGrid.SelectedItem as RoomData.RoomData;
-            string roomPostcode = roomItem.location.postcode;
-            roomPostcode = roomPostcode.Replace(" ", "");
-            string weatherString = "";
-            try
+            if(roomItem != null)
             {
-                LoadingIcon.Visibility = Visibility.Visible;                             
-                weatherString = await GetWeatherAsync(client, roomPostcode);                          
+                string roomPostcode = roomItem.location.postcode;
+                roomPostcode = roomPostcode.Replace(" ", "");
+                string weatherString = "";
+                try
+                {
+                    LoadingIcon.Visibility = Visibility.Visible;
+                    weatherString = await GetWeatherAsync(client, roomPostcode);
+                }
+                finally
+                {
+                    LoadingIcon.Visibility = Visibility.Collapsed;
+                    MessageBox.Show(weatherString);
+                }
             }
-            finally
-            {           
-                LoadingIcon.Visibility = Visibility.Collapsed;
-                MessageBox.Show(weatherString);               
-            }            
+            else
+            {
+                MessageBox.Show("Please select a room");
+            }
+                 
         }
 
         //Uses the orchestrator GET request to retrieve weather JSON  that is converted to object and used to construct weather string on client side
@@ -279,28 +288,53 @@ namespace RESTClientService
         //Check distance method for button click on UI, converts user entered postcode into acceptable format before trying to use API
         private async void CheckDistance(object sender, RoutedEventArgs e)
         {
+            
 
             RoomData.RoomData roomItem = RoomDataGrid.SelectedItem as RoomData.RoomData;
-            string roomPostcode = roomItem.location.postcode;
-            string userPostcode = postcodeText.Text;
-
-            userPostcode = userPostcode.Replace(" ", "");
-            roomPostcode = roomPostcode.Replace(" ", "");
-
-            string distanceString = "";
             
-            try
-            {              
-                LoadingIcon.Visibility = Visibility.Visible;                             
-                distanceString = await GetDistanceAsync(client, roomPostcode, userPostcode);
-            }
-            finally
+            if(roomItem != null)
             {
-                LoadingIcon.Visibility = Visibility.Collapsed;
-                MessageBox.Show("Distance to address: " + distanceString);
-            }   
+                string roomPostcode = roomItem.location.postcode;
+                string userPostcode = postcodeText.Text;
+                string distanceString = "";
+
+
+                userPostcode = userPostcode.Replace(" ", "");
+                roomPostcode = roomPostcode.Replace(" ", "");
+
+                bool isVlaidPostcode = IsValidPostcode(userPostcode);
+                if (isVlaidPostcode)
+                {
+                    try
+                    {
+                        LoadingIcon.Visibility = Visibility.Visible;
+                        distanceString = await GetDistanceAsync(client, roomPostcode, userPostcode);
+                    }
+                    finally
+                    {
+                        LoadingIcon.Visibility = Visibility.Collapsed;
+                        MessageBox.Show("Distance to address: " + distanceString);
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("Please Enter a Valid Postcode");
+                }
+            }
+            else
+            {
+                MessageBox.Show("Please Select a Room");
+            }
+            
         }
-        
+
+        static bool IsValidPostcode(string postcode)
+        {
+            // Regular expression for UK postcode format
+            string pattern = @"^([A-Z]{1,2}[0-9]{1,2}[A-Z]?)\s?([0-9][A-Z]{2})$";
+            return Regex.IsMatch(postcode.ToUpper(), pattern);
+        }
+
         //Orchestrator GET request that returns JSON that is deserialised into object for storage and use in client
         static async Task<string> GetDistanceAsync(HttpClient httpClient, string postcode1, string postcode2)
         {
@@ -319,19 +353,28 @@ namespace RESTClientService
         private async void CheckCrime(object sender, RoutedEventArgs e)
         {
             RoomData.RoomData roomItem = RoomDataGrid.SelectedItem as RoomData.RoomData;
-            string roomPostcode = roomItem.location.postcode;
-            roomPostcode = roomPostcode.Replace(" ", "");
-            string crimeString = "";
-            try
+            if(roomItem != null)
             {
-                LoadingIcon.Visibility = Visibility.Visible;            
-                crimeString = await GetCrimeAsync(client, roomPostcode);
+                string roomPostcode = roomItem.location.postcode;
+                roomPostcode = roomPostcode.Replace(" ", "");
+                string crimeString = "";
+                try
+                {
+                    LoadingIcon.Visibility = Visibility.Visible;
+                    crimeString = await GetCrimeAsync(client, roomPostcode);
 
-            } finally
-            {         
-                LoadingIcon.Visibility = Visibility.Collapsed;
-                MessageBox.Show(crimeString);
-            }  
+                }
+                finally
+                {
+                    LoadingIcon.Visibility = Visibility.Collapsed;
+                    MessageBox.Show(crimeString);
+                }
+            }
+            else
+            {
+                MessageBox.Show("Please Select a Room");
+            }
+            
         }
 
         //Method for using the orchestrator to get crime data
